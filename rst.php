@@ -1,9 +1,9 @@
 <?php
-$systemMdp = 'pwd1234';
 
 require_once 'config.php';
+session_start();
 
-if($systemMdp != $_REQUEST['mdp']) {
+if(empty($_SESSION['userid'])) {
     echo 'Accès interdit !';
     exit;
 }
@@ -20,15 +20,15 @@ if($systemMdp != $_REQUEST['mdp']) {
         <form method="post">
             <p>
                 <input type="text" name="login" placeholder="login" />
-                <input type="hidden" name="mdp" value="<?php echo $systemMdp; ?>" />
                 <input type="submit" name="valid" value="Obtenir le lien" />
             </p>
         </form>
         <p>Envoyer ce code à l'utilisateur qui a oublié son mdp</p>
         <?php if(!empty($_REQUEST['valid'])) {
             $found = Auth::getInstance()->getCodeFromLogin($_REQUEST['login']);
-            ?>
-        <kbd><?php echo $_SERVER['HTTP_HOST'].'/?inc=rst&amp;id='.$found['id'].'&amp;code='.$found['pwd']; ?></kbd>
-        <?php } ?>
+
+            echo '<p>Si ce compte existe, un lien de réinitialisation a été généré.</p>';
+        }
+        ?> 
     </body>
 </html>
