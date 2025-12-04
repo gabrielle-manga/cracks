@@ -20,4 +20,4 @@ val integer not null
 );
 
 insert into users (login, pwd, isadmin)
-values('admin', '21232f297a57a5a743894a0e4a801fc3', 1);
+values('admin', '8b9d2c431128db737cc5e1c71ec6d41b', 1);
