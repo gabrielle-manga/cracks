@@ -18,26 +18,25 @@ class Auth {
     
     public function subscribe($login, $pwd) {
         global $db;
-        $q = 'insert into users values(null, "'.addslashes($login).'", "'.md5($pwd).'", 0)';
+        $hash = password_hash($pwd, PASSWORD_DEFAULT);
+        $q = 'insert into users values(null, "'.addslashes($login).'", "'.$hash.'", 0)';
         $db->query($q);
     }
     
     public function tryLog($login, $pwd): bool {
         global $db;
-        $q = 'select * from users where login="'.$login.'" and pwd="'.md5($pwd).'"';
-        $found = null;
-        $ls = $db->query($q, PDO::FETCH_ASSOC);
-        if(!empty($ls)) {
-            foreach($ls as $l) { $found = $l; }
-        }
-        if($found) {
-            $this->log($found['id']);
+        $q = 'select * from users where login="'.$login.'"';
+        $stmt = $db->query($q, PDO::FETCH_ASSOC);
+        $user = $stmt ? $stmt->fetch() : null;
+
+        if($user && password_verify($pwd, $user['pwd'])) {
+            $this->log($user['id']);
             return true;
-        } else {
-            return false;
         }
+
+        return false;
     }
-    
+
     public function log($id) {
         $_SESSION['userid'] = $id;
     }
@@ -62,7 +61,8 @@ class Auth {
     
     public function resetPwd($id, $code, $newPwd) {
         global $db;
-        $q = 'update users set pwd="'.md5($newPwd).'" where id="'.$id.'" and pwd="'.$code.'"';
+        $hash = password_hash($newPwd, PASSWORD_DEFAULT);
+        $q = 'update users set pwd="'.$hash.'" where id="'.$id.'" and pwd="'.$code.'"';
         $db->query($q);
     }
 }
