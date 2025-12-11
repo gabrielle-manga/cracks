@@ -1,13 +1,49 @@
 <?php
-    if(!empty($_REQUEST['go'])) {
-        if(Auth::getInstance()->tryLog($_REQUEST['login'], $_REQUEST['pwd'])) {
-            header('Location:index.php?sid='.Auth::getInstance()->getSid());
-            exit;
+    if (!empty($_REQUEST['go'])) {
+
+        $login = $_REQUEST['login'] ?? '';
+        $pwd   = $_REQUEST['pwd'] ?? '';
+
+       
+        if (!isset($_SESSION['login_attempts'])) {
+            $_SESSION['login_attempts'] = [];
+        }
+
+        if (!isset($_SESSION['login_attempts'][$login])) {
+            $_SESSION['login_attempts'][$login] = [
+                'count'        => 0,
+                'locked_until' => 0,
+            ];
+        }
+
+        $now    = time();
+        $record = &$_SESSION['login_attempts'][$login];
+
+       
+        if ($record['locked_until'] > $now) {
+            echo '<p style="color:red;">Trop de tentatives échouées. Réessayez plus tard.</p>';
         } else {
-            echo '<p>Erreur d\'identifiants !</p>';
+            if (Auth::getInstance()->tryLog($login, $pwd)) {
+                
+                $record['count']        = 0;
+                $record['locked_until'] = 0;
+
+                header('Location:index.php?sid='.Auth::getInstance()->getSid());
+                exit;
+            } else {
+                $record['count']++;
+
+                if ($record['count'] > 3) {
+                    $record['locked_until'] = $now + 3 * 60;
+                    echo '<p style="color:red;">Compte temporairement verrouillé après plusieurs tentatives échouées.</p>';
+                } else {
+                    echo '<p>Erreur d\'identifiants !</p>';
+                }
+            }
         }
     }
-?><form method="post">
+?>
+<form method="post">
     <div>
         <h2>Connexion</h2>
         <p>
